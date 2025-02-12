@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contagem de Mercadoria</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-            <!--icon-->
     <link rel="icon" type="image/svg" sizes="16x16"  href="data/selos/box.svg">
     <style>
         body {
@@ -91,6 +89,16 @@
                 <input type="text" placeholder="Nome do Produto">
                 <input type="file" accept="image/*" multiple onchange="carregarImagens(event, this)">
                 <div class="image-container"></div>
+                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 1)">
+                <div class="image-container-opcionais-1"></div>
+                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 2)">
+                <div class="image-container-opcionais-2"></div>
+                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 3)">
+                <div class="image-container-opcionais-3"></div>
+                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 4)">
+                <div class="image-container-opcionais-4"></div>
+                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 5)">
+                <div class="image-container-opcionais-5"></div>
                 <textarea placeholder="Comentário (opcional)"></textarea>
                 <div class="counter">
                     <button onclick="alterarQuantidade(this, -1)">-</button>
@@ -103,7 +111,20 @@
 
         function carregarImagens(event, input) {
             const container = input.nextElementSibling;
-            container.innerHTML = ''; // Limpa imagens anteriores
+            Array.from(event.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.dataset.pdf = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function carregarImagensOpcionais(event, input, opcional) {
+            const container = document.querySelector(`.image-container-opcionais-${opcional}`);
             Array.from(event.target.files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -128,42 +149,75 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
             let y = 10;
-            
-            // Adicionar data e hora
+            let x = 10;
+
             const dataAtual = new Date();
             const dataFormatada = `${dataAtual.toLocaleDateString()} ${dataAtual.toLocaleTimeString()}`;
             doc.text(`Contagem de Mercadoria - ${dataFormatada}`, 10, y);
             y += 10;
-            
+
             document.querySelectorAll('.container').forEach((produto, index) => {
                 const nome = produto.querySelector('input[type=text]').value;
                 const quantidade = produto.querySelector('input[type=number]').value;
                 const comentario = produto.querySelector('textarea').value;
                 const imagens = produto.querySelectorAll('.image-container img');
-                
+                const imagensOpcionais1 = produto.querySelectorAll('.image-container-opcionais-1 img');
+                const imagensOpcionais2 = produto.querySelectorAll('.image-container-opcionais-2 img');
+                const imagensOpcionais3 = produto.querySelectorAll('.image-container-opcionais-3 img');
+                const imagensOpcionais4 = produto.querySelectorAll('.image-container-opcionais-4 img');
+                const imagensOpcionais5 = produto.querySelectorAll('.image-container-opcionais-5 img');
+
                 let splitNome = doc.splitTextToSize(`Produto ${index + 1}: ${nome}`, 180);
                 doc.text(splitNome, 10, y);
                 y += splitNome.length * 7;
-                
+
                 doc.text(`Quantidade: ${quantidade}`, 10, y);
                 y += 10;
-                
+
                 if (comentario.trim() !== '') {
                     let splitComentario = doc.splitTextToSize(`Comentário: ${comentario}`, 180);
                     doc.text(splitComentario, 10, y);
                     y += splitComentario.length * 7;
                 }
-                
+
                 imagens.forEach((img, i) => {
-                    if (y + 35 > 280) { // Verifica se precisa de nova página
-                        doc.addPage();
-                        y = 10;
+                    if (x + 40 > 180) {
+                        x = 10;
+                        y += 35;
+                        if (y + 35 > 280) {
+                            doc.addPage();
+                            y = 10;
+                        }
                     }
-                    doc.addImage(img.dataset.pdf, 'JPEG', 10 + (i * 40), y, 30, 30);
+                    doc.addImage(img.dataset.pdf, 'JPEG', x, y, 30, 30);
+                    x += 35;
                 });
+
+                function adicionarImagensOpcionais(imagensOpcionais) {
+                    imagensOpcionais.forEach((img, i) => {
+                        if (x + 40 > 180) {
+                            x = 10;
+                            y += 35;
+                            if (y + 35 > 280) {
+                                doc.addPage();
+                                y = 10;
+                            }
+                        }
+                        doc.addImage(img.dataset.pdf, 'JPEG', x, y, 30, 30);
+                        x += 35;
+                    });
+                }
+
+                adicionarImagensOpcionais(imagensOpcionais1);
+                adicionarImagensOpcionais(imagensOpcionais2);
+                adicionarImagensOpcionais(imagensOpcionais3);
+                adicionarImagensOpcionais(imagensOpcionais4);
+                adicionarImagensOpcionais(imagensOpcionais5);
+
                 y += 40;
+                x = 10;
             });
-            
+
             doc.save('contagem_mercadoria.pdf');
         }
     </script>
