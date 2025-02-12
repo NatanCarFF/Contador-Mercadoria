@@ -15,7 +15,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(to right, #667eea, #764ba2);
+            background: linear-gradient(to right, #ff9800, #ff5722);
             flex-direction: column;
             padding: 20px;
             color: white;
@@ -30,11 +30,16 @@
             width: 300px;
             color: black;
         }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
         img {
-            max-width: 100px;
-            max-height: 100px;
-            display: block;
-            margin: 10px auto;
+            max-width: 80px;
+            max-height: 80px;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
@@ -49,14 +54,14 @@
             font-size: 16px;
             cursor: pointer;
             border: none;
-            background: #ff4081;
+            background: #d84315;
             color: white;
             border-radius: 5px;
         }
         button:hover {
-            background: #c60055;
+            background: #bf360c;
         }
-        input[type="number"], input[type="text"] {
+        input[type="number"], input[type="text"], textarea {
             width: 100%;
             padding: 5px;
             margin: 5px 0;
@@ -84,8 +89,9 @@
             container.classList.add('container');
             container.innerHTML = `
                 <input type="text" placeholder="Nome do Produto">
-                <input type="file" accept="image/*" onchange="carregarImagem(event, this)">
-                <img src="" alt="Imagem do Produto">
+                <input type="file" accept="image/*" multiple onchange="carregarImagens(event, this)">
+                <div class="image-container"></div>
+                <textarea placeholder="Comentário (opcional)"></textarea>
                 <div class="counter">
                     <button onclick="alterarQuantidade(this, -1)">-</button>
                     <input type="number" value="0" min="0">
@@ -95,15 +101,19 @@
             document.getElementById('produtos').appendChild(container);
         }
 
-        function carregarImagem(event, input) {
-            const img = input.nextElementSibling;
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                img.src = e.target.result;
-                img.dataset.pdf = e.target.result; // Armazena a imagem para o PDF
-            };
-            reader.readAsDataURL(file);
+        function carregarImagens(event, input) {
+            const container = input.nextElementSibling;
+            container.innerHTML = ''; // Limpa imagens anteriores
+            Array.from(event.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.dataset.pdf = e.target.result;
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         function alterarQuantidade(button, valor) {
@@ -116,7 +126,7 @@
 
         function gerarPDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF('p', 'mm', 'a4');
             let y = 10;
             
             // Adicionar data e hora
@@ -128,15 +138,30 @@
             document.querySelectorAll('.container').forEach((produto, index) => {
                 const nome = produto.querySelector('input[type=text]').value;
                 const quantidade = produto.querySelector('input[type=number]').value;
-                const imgSrc = produto.querySelector('img').dataset.pdf;
+                const comentario = produto.querySelector('textarea').value;
+                const imagens = produto.querySelectorAll('.image-container img');
                 
-                doc.text(`Produto ${index + 1}: ${nome} - Quantidade: ${quantidade}`, 10, y);
+                let splitNome = doc.splitTextToSize(`Produto ${index + 1}: ${nome}`, 180);
+                doc.text(splitNome, 10, y);
+                y += splitNome.length * 7;
+                
+                doc.text(`Quantidade: ${quantidade}`, 10, y);
                 y += 10;
                 
-                if (imgSrc) {
-                    doc.addImage(imgSrc, 'JPEG', 10, y, 30, 30);
-                    y += 35;
+                if (comentario.trim() !== '') {
+                    let splitComentario = doc.splitTextToSize(`Comentário: ${comentario}`, 180);
+                    doc.text(splitComentario, 10, y);
+                    y += splitComentario.length * 7;
                 }
+                
+                imagens.forEach((img, i) => {
+                    if (y + 35 > 280) { // Verifica se precisa de nova página
+                        doc.addPage();
+                        y = 10;
+                    }
+                    doc.addImage(img.dataset.pdf, 'JPEG', 10 + (i * 40), y, 30, 30);
+                });
+                y += 40;
             });
             
             doc.save('contagem_mercadoria.pdf');
