@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contagem de Mercadoria</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            flex-direction: column;
+            padding: 20px;
+            color: white;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-bottom: 20px;
+            width: 300px;
+            color: black;
+        }
+        img {
+            max-width: 100px;
+            max-height: 100px;
+            display: block;
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background: #ff4081;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #c60055;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="produtos"></div>
+    <button onclick="adicionarProduto()">Adicionar Produto</button>
+    <button onclick="gerarPDF()">Salvar em PDF</button>
+    
+    <footer>Desenvolvido por Natanael Carvalho</footer>
+    
+    <script>
+        function adicionarProduto() {
+            const container = document.createElement('div');
+            container.classList.add('container');
+            container.innerHTML = `
+                <input type="text" placeholder="Nome do Produto">
+                <input type="file" accept="image/*" onchange="carregarImagem(event, this)">
+                <img src="" alt="Imagem do Produto">
+                <div class="counter">
+                    <button onclick="alterarQuantidade(this, -1)">-</button>
+                    <input type="number" value="0" min="0">
+                    <button onclick="alterarQuantidade(this, 1)">+</button>
+                </div>
+            `;
+            document.getElementById('produtos').appendChild(container);
+        }
+
+        function carregarImagem(event, input) {
+            const img = input.nextElementSibling;
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                img.dataset.pdf = e.target.result; // Armazena a imagem para o PDF
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function alterarQuantidade(button, valor) {
+            let quantidade = button.parentNode.querySelector('input[type=number]');
+            let novaQuantidade = parseInt(quantidade.value) + valor;
+            if (novaQuantidade >= 0) {
+                quantidade.value = novaQuantidade;
+            }
+        }
+
+        function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 10;
+            
+            // Adicionar data e hora
+            const dataAtual = new Date();
+            const dataFormatada = `${dataAtual.toLocaleDateString()} ${dataAtual.toLocaleTimeString()}`;
+            doc.text(`Contagem de Mercadoria - ${dataFormatada}`, 10, y);
+            y += 10;
+            
+            document.querySelectorAll('.container').forEach((produto, index) => {
+                const nome = produto.querySelector('input[type=text]').value;
+                const quantidade = produto.querySelector('input[type=number]').value;
+                const imgSrc = produto.querySelector('img').dataset.pdf;
+                
+                doc.text(`Produto ${index + 1}: ${nome} - Quantidade: ${quantidade}`, 10, y);
+                y += 10;
+                
+                if (imgSrc) {
+                    doc.addImage(imgSrc, 'JPEG', 10, y, 30, 30);
+                    y += 35;
+                }
+            });
+            
+            doc.save('contagem_mercadoria.pdf');
+        }
+    </script>
+</body>
+</html>
