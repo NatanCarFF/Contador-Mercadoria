@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contagem de Mercadoria</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link rel="icon" type="image/svg" sizes="16x16"  href="data/selos/box.svg">
+    <link rel="icon" type="image/svg" sizes="16x16" href="data/selos/box.svg">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -105,6 +105,7 @@
                     <input type="number" value="0" min="0">
                     <button onclick="alterarQuantidade(this, 1)">+</button>
                 </div>
+                <button onclick="excluirProduto(this)">Excluir Produto</button>
             `;
             document.getElementById('produtos').appendChild(container);
         }
@@ -143,6 +144,11 @@
             if (novaQuantidade >= 0) {
                 quantidade.value = novaQuantidade;
             }
+        }
+
+        function excluirProduto(button) {
+            const produto = button.closest('.container');
+            produto.remove();
         }
 
         function gerarPDF() {
