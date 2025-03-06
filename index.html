@@ -87,17 +87,17 @@
             container.classList.add('container');
             container.innerHTML = `
                 <input type="text" placeholder="Nome do Produto">
-                <input type="file" accept="image/*" multiple onchange="carregarImagens(event, this)">
+                <input type="file" accept="image/*" onchange="carregarImagens(event, this)">
                 <div class="image-container"></div>
-                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 1)">
+                <input type="file" accept="image/*" onchange="carregarImagensOpcionais(event, this, 1)">
                 <div class="image-container-opcionais-1"></div>
-                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 2)">
+                <input type="file" accept="image/*" onchange="carregarImagensOpcionais(event, this, 2)">
                 <div class="image-container-opcionais-2"></div>
-                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 3)">
+                <input type="file" accept="image/*" onchange="carregarImagensOpcionais(event, this, 3)">
                 <div class="image-container-opcionais-3"></div>
-                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 4)">
+                <input type="file" accept="image/*" onchange="carregarImagensOpcionais(event, this, 4)">
                 <div class="image-container-opcionais-4"></div>
-                <input type="file" accept="image/*" multiple onchange="carregarImagensOpcionais(event, this, 5)">
+                <input type="file" accept="image/*" onchange="carregarImagensOpcionais(event, this, 5)">
                 <div class="image-container-opcionais-5"></div>
                 <textarea placeholder="Comentário (opcional)"></textarea>
                 <div class="counter">
@@ -112,30 +112,34 @@
 
         function carregarImagens(event, input) {
             const container = input.nextElementSibling;
-            Array.from(event.target.files).forEach(file => {
+            const file = event.target.files[0];  // Apenas o primeiro arquivo
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.dataset.pdf = e.target.result;
+                    container.innerHTML = '';  // Limpa o container antes de adicionar a imagem
                     container.appendChild(img);
                 };
                 reader.readAsDataURL(file);
-            });
+            }
         }
 
         function carregarImagensOpcionais(event, input, opcional) {
             const container = document.querySelector(`.image-container-opcionais-${opcional}`);
-            Array.from(event.target.files).forEach(file => {
+            const file = event.target.files[0];  // Apenas o primeiro arquivo
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.dataset.pdf = e.target.result;
+                    container.innerHTML = '';  // Limpa o container antes de adicionar a imagem
                     container.appendChild(img);
                 };
                 reader.readAsDataURL(file);
-            });
+            }
         }
 
         function alterarQuantidade(button, valor) {
